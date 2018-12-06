@@ -101,19 +101,20 @@ ylabel("SNR_{out} (dB)");
 clf;
 for i = 1:6
   Nr = 2 ^ (9 + i);
-  R = abs(fft([r(1:Nr), zeros([1 (N-Nr)])]));
+  F3 = [-2*Nr:2*Nr-1]/(4*Nr);
+  R = abs(fft([r(1:Nr), zeros([1 (3*Nr)])]));
   R = fftshift(R);
   R = 20*log10(R);
   PNF = 10*log10(Pn * Nr);
   subplot(3, 2, i);
-  plot(F, R, "b-", F, PNF*ones([1 N]), "r-");
+  plot(F3, R, "b-", F3, PNF*ones([1 4*Nr]), "r-");
   xlabel('frequency / f_x');
   ylabel('dB');
   axis([-0.8, 0.8, -40, 100]); grid on;
   SNR_out = max(R) - PNF;
   SAMP_SNR(i) = SNR_out;
 endfor
-pause;
+%pause;
 
 clf;
 plot(S, SAMP_SNR, "-o");
