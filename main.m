@@ -48,18 +48,15 @@ ylabel('dB');
 r = x + v;
 SNRDB = 10*log10(sum(x.^2)/sum(v.^2))
 
-R = abs(fft(r));
-R = fftshift(R);
-
-R = 20*log10(R);
-
 clf;
-plot(t(1:100), x(1:100), "b-", t(1:100), r(1:100), "g-", t(1:100), SNRDB*ones(100), "r-");
-legend("Clean signal", "Noisy signal", "SNR (dB)");
+plot(t(1:100), x(1:100), "b-", t(1:100), r(1:100), "g-", t(1:100));
+legend("Clean signal", "Noisy signal");
 xlabel("t");
+%pause;
 
-target_SNRDB = -20;
-target_SNR = (target_SNRDB / 10)^10
+% Part C4, controlling SNR_dB
+target_SNRDB = 20;
+target_SNR = 10^(target_SNRDB / 10)
 b = 1 / target_SNR;
 
 r = x + sqrt(b) * v;
@@ -67,6 +64,58 @@ r = x + sqrt(b) * v;
 meas_SNRDB = 10*log10(sum(x.^2)/sum((sqrt(b)*v).^2))
 
 clf;
-plot(t(1:100), x(1:100), "b-", t(1:100), r(1:100), "g-", t(1:100), SNRDB*ones(100), "r-");
-legend("Clean signal", "Noisy signal", "SNR (dB)");
+plot(t(1:100), x(1:100), "b-", t(1:100), r(1:100), "g-");
+legend("Clean signal", sprintf("Noisy signal\nSNR_{dB} = %f", meas_SNRDB));
 xlabel("t");
+
+% Part D, processing noisy signal
+Pn = b
+
+SAMP_SNR = zeros([1 6]);
+S = log2(2.^(9+[1:6]));
+
+clf;
+for i = 1:6
+  Nr = 2 ^ (9 + i);
+  F3 = [-Nr/2:Nr/2-1]/Nr;
+  R = abs(fft(r(1:Nr)));
+  R = fftshift(R);
+  R = 20*log10(R);
+  PNF = 10*log10(Pn * Nr);
+  subplot(3, 2, i);
+  plot(F3, R, "b-", F3, PNF*ones([1 Nr]), "r-");
+  xlabel('frequency / f_x');
+  ylabel('dB');
+  axis([-0.8, 0.8, -40, 100]); grid on;
+  SNR_out = max(R) - PNF;
+  SAMP_SNR(i) = SNR_out;
+endfor
+
+clf;
+plot(S, SAMP_SNR, "-o");
+xlabel("log_2(N)");
+ylabel("SNR_{out} (dB)");
+
+% Part D4, zero-padding DFT
+
+clf;
+for i = 1:6
+  Nr = 2 ^ (9 + i);
+  R = abs(fft([r(1:Nr), zeros([1 (N-Nr)])]));
+  R = fftshift(R);
+  R = 20*log10(R);
+  PNF = 10*log10(Pn * Nr);
+  subplot(3, 2, i);
+  plot(F, R, "b-", F, PNF*ones([1 N]), "r-");
+  xlabel('frequency / f_x');
+  ylabel('dB');
+  axis([-0.8, 0.8, -40, 100]); grid on;
+  SNR_out = max(R) - PNF;
+  SAMP_SNR(i) = SNR_out;
+endfor
+pause;
+
+clf;
+plot(S, SAMP_SNR, "-o");
+xlabel("log_2(N)");
+ylabel("SNR_{out} (dB)");
